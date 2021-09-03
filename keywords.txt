@@ -1,0 +1,7 @@
+screamingfrog
+dog
+cat
+apple
+orange
+grass
+fruit
