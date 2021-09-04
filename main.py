@@ -66,6 +66,7 @@ def scraper(keyword: str) -> Sequence:
             url = f'https://www.google.pl/search?q=site%3A+https://{LINK}/{keyword}&start={page_num}0'
             page = requests.get(url, headers=HEADERS)
             bs = BeautifulSoup(page.text, 'html.parser')
+            
             for link in bs.find_all('div', class_='yuRUbf'):
                 a_tag = link.a['href']
                 validate = a_tag.split('/')[2]
