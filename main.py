@@ -30,7 +30,7 @@ class DataSaver:
         else:
             print(f'[INFO] File {self.file_name} already exists')
 
-    def file_writer(self, data: Union[list, int], keyword: str) -> None:
+    def file_writer(self, data: Union[T], keyword: str) -> None:
         """
         Write data to file
         The sequence have to be in order
@@ -55,7 +55,7 @@ def read_file(path: str) -> Iterator[str]:
             yield row.strip()
 
 
-def scraper(keyword: str) -> Sequence:
+def scraper(keyword: str) -> Sequence[T]:
     """Scraping Bot Loop"""
     links = []
     count = 0
