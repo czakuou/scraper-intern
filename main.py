@@ -1,5 +1,5 @@
-from typing import Iterator, Sequence, TypeVar
-from requests import get
+from typing import Iterator, Sequence, TypeVar, Union
+import requests
 from bs4 import BeautifulSoup
 import time
 import os
@@ -10,50 +10,41 @@ HEADERS = {
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.19582"
 }
 LINK = 'www.searchenginejournal.com'
-
 FILE_NAME = ['url_results.csv', 'keyword_counter.csv']
-
 T = TypeVar('T', list, int)
 
 
-def create_url_file() -> None:
-    """Create url_results.csv file if not exists"""
-    if not os.path.isfile(FILE_NAME[0]):
-        with open(FILE_NAME[0], 'a', newline='') as csvfile:
-            fieldnames = ['keyword', 'URL']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+class DataSaver:
+    def __init__(self, file_name: str, header_names: Sequence[str]):
+        self.file_name = file_name
+        self.header_names = header_names
 
-            writer.writeheader()
+    def create_file(self) -> None:
+        if not os.path.isfile(self.file_name):
+            with open(self.file_name, 'w', newline='') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=self.header_names)
+                writer.writeheader()
 
+                print(f'[INFO] File {self.file_name} created')
+        else:
+            print(f'[INFO] File {self.file_name} already exists')
 
-def create_count_file() -> None:
-    """Create keyword_counter.csv file if not exists"""
-    if not os.path.isfile(FILE_NAME[1]):
-        with open(FILE_NAME[1], 'a', newline='') as csvfile:
-            fieldnames = ['keyword', 'count']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
+    def file_writer(self, data: Union[list, int], keyword: str) -> None:
+        """
+        Write data to file
+        The sequence have to be in order
+        (URL, counter)
+        """
+        try:
+            with open(self.file_name, 'a', newline='') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=self.header_names)
 
-
-def file_writer(data: Sequence[T], keyword: str) -> None:
-    """
-    Write data to files
-    The sequence have to be in order
-    (URL, counter)
-    """
-    with open(FILE_NAME[0], 'a', newline='') as csvfile:
-        fieldnames = ['keyword', 'URL']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-        writer.writeheader()
-        writer.writerow({fieldnames[0]: keyword, fieldnames[1]: data[0]})
-
-    with open(FILE_NAME[1], 'a', newline='') as csvfile:
-        fieldnames = ['keyword', 'count']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-        writer.writeheader()
-        writer.writerow({fieldnames[0]: keyword, fieldnames[1]: data[1]})
+                writer.writerow({
+                    self.header_names[0]: keyword,
+                    self.header_names[1]: data
+                })
+        except Exception as e:
+            print(e)
 
 
 def read_file(path: str) -> Iterator[str]:
@@ -62,41 +53,55 @@ def read_file(path: str) -> Iterator[str]:
         for row in f:
             yield row.strip()
 
-    # with open(path, 'r') as f:
-    #     keywords_list = f.readlines()
-    #     for i, row in enumerate(keywords_list):
-    #         row = row.replace('\n', '')
-    #         keywords_list[i] = row
-    #
-    # return keywords_list
 
-
-def scraper(keyword: str):
-    url = f'https://www.google.pl/search?q=site%3A+https://{LINK}/{keyword}'
-    page = get(url, headers=HEADERS)
-    bs = BeautifulSoup(page.text, 'html.parser')
+def scraper(keyword: str) -> Sequence:
+    """Scraping Bot Loop"""
     links = []
     count = 0
-    for link in bs.find_all('div', class_='yuRUbf'):
-        a_tag = link.a['href']
-        validate = a_tag.split('/')[2]
-        if validate == LINK:
-            links.append(a_tag)
-            count += 1
+    page_num = 0
 
-    # links = [link.a['href'] for link in bs.find_all('div', class_='yuRUbf')
-    #          if link.a['href'].split('/')[2] == LINK]
-    time.sleep(2)
-    return (links, count)
+    while True:
+        try:
+            url = f'https://www.google.pl/search?q=site%3A+https://{LINK}/{keyword}&start={page_num}0'
+            page = requests.get(url, headers=HEADERS)
+            bs = BeautifulSoup(page.text, 'html.parser')
+            print(bs)
+            for link in bs.find_all('div', class_='yuRUbf'):
+                a_tag = link.a['href']
+                validate = a_tag.split('/')[2]
+                if validate == LINK:
+                    links.append(a_tag)
+                    count += 1
+                else:
+                    return (links, count)
+
+            print(f'[INFO] Scrapped {url}')
+            page_num += 1
+            time.sleep(10)
+
+        except requests.exceptions.RequestException:
+            pass
 
 
 def main():
-    create_files()
-    print('[INFO] Start wraper')
+    # Initialize files
+    url_file = DataSaver(FILE_NAME[0], ['keyword', 'URL'])
+    count_file = DataSaver(FILE_NAME[1], ['keyword', 'count'])
+
+    # create *.csv files if does not exists
+    url_file.create_file()
+    count_file.create_file()
+
+    print('[INFO] Start scraper')
+
+    # keywords loop
     for keyword in read_file('keywords.txt'):
         data = scraper(keyword)
-        file_writer(data, keyword)
-        print('[INFO] Saved URL for {}'.format(keyword))
+
+        url_file.file_writer(data[0], keyword)
+        count_file.file_writer(data[1], keyword)
+
+        print('[INFO] Saved URL and Count for {}'.format(keyword))
 
 
 if __name__ == '__main__':
