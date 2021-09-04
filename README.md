@@ -32,4 +32,4 @@ $ python main.py
 2. More complex and random sleep options to prevent Google from finding that we are using the bot
 3. Add options to select how to store our results (csv, excel, txt, parquet etc.)
 ## The risks of using such a program
-Scraping Google Search results goes against Google's terms and condiotion. Violating those can become a legal problem, but it's depends on countres legal system.
+Scraping Google Search results goes against Google's terms and condiotion. Violating those can become a legal problem, but it's depends on your countries legal system.
