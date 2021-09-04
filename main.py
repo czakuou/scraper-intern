@@ -1,13 +1,14 @@
+import csv
+import os
+import time
 from typing import Iterator, Sequence, TypeVar, Union
+
 import requests
 from bs4 import BeautifulSoup
-import time
-import os
-import csv
 
 HEADERS = {
     "User-Agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.19582"
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.19582"
 }
 LINK = 'www.searchenginejournal.com'
 FILE_NAME = ['url_results.csv', 'keyword_counter.csv']
