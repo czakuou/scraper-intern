@@ -77,7 +77,7 @@ def scraper(keyword: str) -> Sequence:
 
             print(f'[INFO] Scrapped {url}')
             page_num += 1
-            time.sleep(10)
+            time.sleep(20)
 
         except requests.exceptions.RequestException:
             pass
