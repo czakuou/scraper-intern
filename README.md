@@ -1,4 +1,4 @@
-# Simple 'site' scrapper
+# Ssimple 'site' scrapper
 It's a simple web scrapper that goes through Google Search results and extracts all the links pointing to `SearchEngineJournal.`
 The search queries look like:
 ```
